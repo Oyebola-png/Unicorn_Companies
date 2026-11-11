@@ -26,7 +26,6 @@ try:
     df = load_data()
     # app title
     st.title("Unicorn Companies Analysis App")
-    st.dataframe(df.head(10))
 
     # filters for country, industry etc
     countries = df["Country/Region"].unique()
@@ -63,6 +62,11 @@ try:
 
     def trillions_format(value):
             return f"${value / 1_000_000_000_000:,.2f}T"
+
+    # empty filters handlers
+    def show_empty_msg():
+        st.info("No matching filter.Adjust your selected filters")
+        
 
     # Global Overview
     st.header("1.Global Overview")
@@ -109,6 +113,33 @@ try:
             title="Unicorns by Continent"
             )
             st.plotly_chart(fig, use_container_width=True)
+            
+    else:
+        show_empty_msg()
+
+        ## This is another section
+    st.subheader("Geogrphical Distribution Map")
+    if not filtered_df.empty:
+        map_data = (
+            filtered_df.groupby("Country/Region")
+            .agg(
+                Companies=("Company","nunique"),
+                Total_Valuation=("Valuation","sum")
+            )
+            .reset_index()
+        )
+        fig = px.choropleth(
+            map_data,
+            locations="Country/Region",
+            locationmode="country names",
+            color="Companies",
+            hover_name="Country/Region",
+            hover_data=["Total_Valuation"],
+            title="Global Unicorn Distribution",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+         show_empty_msg()
 
 except URLError as e:
     st.error(f"This demo requires internet access. Connection error: {e.reason}")
